@@ -7,8 +7,8 @@ allowed_names = {k: getattr(math, k) for k in dir(math) if not k.startswith("__"
 allowed_names.update({
     "ln": math.log,
     "log": math.log10,
-    "sqrt": math.sqrt, #akar dari x
-    "pi": math.pi,
+    "√": math.sqrt, #akar dari x
+    "π": math.pi,
     "e": math.e, #nilai konstanta eluler
     "abs": abs, #mengembalikan nilai abslut
     "pow": pow #pangkat dari x
@@ -16,6 +16,8 @@ allowed_names.update({
 
 def safe_eval(expr):
     expr = expr.replace("^", "**")
+    expr = expr.replace("x", "*")
+    expr = expr.replace("÷", "/")
     try:
         return eval(expr, {"__builtins__": None}, allowed_names)
     except Exception:
@@ -34,17 +36,17 @@ class SciCalc: #gui ddari kalkulator
         # Tampilan layar
         self.display = tk.Entry(
             root, font=("Consolas", 20, "bold"), bd=0, bg="#3c3f41",
-            fg="#ffffff", insertbackground="white", justify="right", relief="flat"
+            fg="#ffffff", insertbackground="white", justify="right", relief="sunken"
         )
         self.display.grid(row=0, column=0, columnspan=6, padx=10, pady=10, sticky="we")
 
         # Daftar tombol
         btn_def = [
-            ("7",1,0), ("8",1,1), ("9",1,2), ("/",1,3), ("sqrt",1,4), ("C",1,5),
-            ("4",2,0), ("5",2,1), ("6",2,2), ("*",2,3), ("^",2,4), ("⌫",2,5),
+            ("7",1,0), ("8",1,1), ("9",1,2), ("÷",1,3), ("√",1,4), ("C",1,5),
+            ("4",2,0), ("5",2,1), ("6",2,2), ("x",2,3), ("^",2,4), ("⌫",2,5),
             ("1",3,0), ("2",3,1), ("3",3,2), ("-",3,3), ("(",3,4), (")",3,5),
             ("0",4,0), (".",4,1), ("±",4,2), ("+",4,3), ("Ans",4,4), ("=",4,5),
-            ("sin",5,0), ("cos",5,1), ("tan",5,2), ("ln",5,3), ("log",5,4), ("pi",5,5),
+            ("sin",5,0), ("cos",5,1), ("tan",5,2), ("ln",5,3), ("log",5,4), ("π",5,5),
             ("e",6,0), ("pow",6,1), ("abs",6,2), ("%",6,3)
         ]
 
@@ -58,7 +60,7 @@ class SciCalc: #gui ddari kalkulator
             elif text in ("C", "⌫"):
                 bg = "#f44336"
                 fg = "white"
-            elif text in ("/", "*", "-", "+", "^", "%"):
+            elif text in ("÷", "x", "-", "+", "^", "%"):
                 bg = "#6A5ACD"
                 fg = "white"
             else:
@@ -67,7 +69,7 @@ class SciCalc: #gui ddari kalkulator
 
             b = tk.Button(
                 root, text=text, width=6, height=2, font=("Consolas", 14, "bold"),
-                bg=bg, fg=fg, relief="flat", activebackground="#666", activeforeground="white",
+                bg=bg, fg=fg, relief="raised", activebackground="#666", activeforeground="white",
                 command=cmd
             )
             b.grid(row=r, column=c, padx=4, pady=4)
@@ -91,7 +93,7 @@ class SciCalc: #gui ddari kalkulator
             self.expr += str(self.ans)
             self.update_display()
             return
-        if label == "sqrt":
+        if label == "√":
             self.expr += "sqrt("
             self.update_display()
             return
@@ -99,8 +101,8 @@ class SciCalc: #gui ddari kalkulator
             self.expr += f"{label}("
             self.update_display()
             return
-        if label == "pi":
-            self.expr += "pi"
+        if label == "π":
+            self.expr += "π"
             self.update_display()
             return
         if label == "e":
@@ -159,9 +161,3 @@ if __name__ == "__main__":
     root = tk.Tk() #jendela utama
     app = SciCalc(root) #objek kalkulator
     root.mainloop() #menjaga GUI tetap berjalan hingga ditutup penguuna
-
-
-#otak atik tampilan layar
-    #relief = tsmpilsn bidang input 
-        #biasa diganti dengan "raised", "sunken", "groove","ridge"
-    
