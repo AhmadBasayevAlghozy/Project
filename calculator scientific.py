@@ -1,144 +1,121 @@
-import tkinter as tk #gui
-from tkinter import messagebox 
-import math #fungsi matematika
+import tkinter as tk
+from tkinter import messagebox
+import math
 
-# fungsi evaluasi aman
+# daftar fungsi matematika yang aman digunakan
 allowed_names = {k: getattr(math, k) for k in dir(math) if not k.startswith("__")}
 allowed_names.update({
     "ln": math.log,
     "log": math.log10,
-    "√": math.sqrt, #akar dari x
+    "√": math.sqrt,
+    "pi": math.pi,
     "π": math.pi,
-    "e": math.e, #nilai konstanta eluler
-    "abs": abs, #mengembalikan nilai abslut
-    "pow": pow #pangkat dari x
+    "e": math.e,
+    "abs": abs,
+    "pow": pow,
+    "sin": lambda x: math.sin(math.radians(x)),
+    "cos": lambda x: math.cos(math.radians(x)),
+    "tan": lambda x: math.tan(math.radians(x)),
 })
 
 def safe_eval(expr):
-    expr = expr.replace("^", "**")
-    expr = expr.replace("x", "*")
-    expr = expr.replace("÷", "/")
+    expr = expr.replace("^", "**").replace("x", "*").replace("÷", "/")
+    expr = expr.replace("π", "pi").replace("√", "sqrt")
     try:
         return eval(expr, {"__builtins__": None}, allowed_names)
     except Exception:
         raise
 
-class SciCalc: #gui ddari kalkulator
+class SciCalc:
     def __init__(self, root):
         self.root = root
         root.title("Scientific Calculator")
         root.resizable(False, False)
         root.configure(bg="#2b2b2b")
 
-        self.expr = "" #input atau perintah dari pengguna
-        self.ans = "" #output dari sistem
+        self.expr = ""
+        self.ans = ""
 
-        # Tampilan layar
+        # layar input
         self.display = tk.Entry(
             root, font=("Consolas", 20, "bold"), bd=0, bg="#3c3f41",
             fg="#ffffff", insertbackground="white", justify="right", relief="sunken"
         )
         self.display.grid(row=0, column=0, columnspan=6, padx=10, pady=10, sticky="we")
 
-        # Daftar tombol
+        # daftar tombol
         btn_def = [
             ("7",1,0), ("8",1,1), ("9",1,2), ("÷",1,3), ("√",1,4), ("C",1,5),
             ("4",2,0), ("5",2,1), ("6",2,2), ("x",2,3), ("^",2,4), ("⌫",2,5),
             ("1",3,0), ("2",3,1), ("3",3,2), ("-",3,3), ("(",3,4), (")",3,5),
-            ("0",4,0), (".",4,1), ("±",4,2), ("+",4,3), ("Ans",4,4), ("=",4,5),
+            ("0",4,0), (".",4,1), ("±",4,2), ("+",4,3), ("back",4,4), ("=",4,5),
             ("sin",5,0), ("cos",5,1), ("tan",5,2), ("ln",5,3), ("log",5,4), ("π",5,5),
             ("e",6,0), ("pow",6,1), ("abs",6,2), ("%",6,3)
         ]
 
         for (text, r, c) in btn_def:
             cmd = lambda x=text: self.on_button(x)
-
-            # Warna tombol
             if text == "=":
-                bg = "#4CAF50"
-                fg = "white"
+                bg, fg = "#0008FF", "white"
             elif text in ("C", "⌫"):
-                bg = "#f44336"
-                fg = "white"
+                bg, fg = "#f44336", "white"
             elif text in ("÷", "x", "-", "+", "^", "%"):
-                bg = "#6A5ACD"
-                fg = "white"
+                bg, fg = "#FFE600", "#000000"
             else:
-                bg = "#4a4a4a"
-                fg = "#ffffff"
+                bg, fg = "#4a4a4a", "#ffffff"
 
-            b = tk.Button(
+            tk.Button(
                 root, text=text, width=6, height=2, font=("Consolas", 14, "bold"),
-                bg=bg, fg=fg, relief="raised", activebackground="#666", activeforeground="white",
+                bg=bg, fg=fg, relief="raised",
+                activebackground="#FFD700", activeforeground="black",
                 command=cmd
-            )
-            b.grid(row=r, column=c, padx=4, pady=4)
+            ).grid(row=r, column=c, padx=4, pady=4)
 
     def on_button(self, label):
         if label == "C":
             self.expr = ""
-            self.update_display()
-            return
-        if label == "⌫":
+        elif label == "⌫":
             self.expr = self.expr[:-1]
-            self.update_display()
-            return
-        if label == "=":
+        elif label == "=":
             self.calculate()
             return
-        if label == "±":
+        elif label == "±":
             self.toggle_sign()
             return
-        if label == "Ans": #memasukkan hasil perhitungan sebelumnya
+        elif label == "Ans":
             self.expr += str(self.ans)
-            self.update_display()
-            return
-        if label == "√":
-            self.expr += "sqrt("
-            self.update_display()
-            return
-        if label in ("sin","cos","tan","ln","log","abs","pow"):
+        elif label == "√":
+            self.expr += "√("
+        elif label in ("sin","cos","tan","ln","log","abs","pow"):
             self.expr += f"{label}("
-            self.update_display()
-            return
-        if label == "π":
-            self.expr += "π"
-            self.update_display()
-            return
-        if label == "e":
+        elif label in ("π", "pi"):
+            self.expr += str(math.pi)
+        elif label == "e":
             self.expr += "e"
-            self.update_display()
-            return
-        if label == "%":
+        elif label == "%":
             self.expr += "/100"
-            self.update_display()
-            return
-        self.expr += label
+        else:
+            self.expr += label
         self.update_display()
 
-    def toggle_sign(self): #menguah positif ke negatif pada angka terakhir yang diketik
+    def toggle_sign(self):
         s = self.expr.rstrip()
         if not s:
             self.expr = "-"
-            self.update_display()
-            return
-        i = len(s)-1
-        while i >=0 and (s[i].isdigit() or s[i] == '.' or s[i].isalpha()):
-            i -= 1
-        token = s[i+1:]
-        if not token:
-            self.expr = "-" + s
-            self.update_display()
-            return
-        before = s[:i+1]
-        if before.endswith("(-"):
-            before = before[:-2] + "("
-            self.expr = before + token
         else:
-            self.expr = before + "(-" + token + ")"
+            i = len(s)-1
+            while i >= 0 and (s[i].isdigit() or s[i] == '.' or s[i].isalpha()):
+                i -= 1
+            token = s[i+1:]
+            before = s[:i+1]
+            if before.endswith("(-"):
+                before = before[:-2] + "("
+                self.expr = before + token
+            else:
+                self.expr = before + "(-" + token + ")"
         self.update_display()
 
-    def update_display(self): #menampilkan setiap perubahan pada kalkulator
+    def update_display(self):
         self.display.delete(0, tk.END)
         self.display.insert(0, self.expr)
 
@@ -146,18 +123,18 @@ class SciCalc: #gui ddari kalkulator
         try:
             result = safe_eval(self.expr)
             if isinstance(result, float):
-                result = round(result, 12) #hasil dibulatkan 12 digit agar rapi
-                if float(result).is_integer(): #jika hasil bulat tidak ditampilkan ke desimal
+                result = round(result, 12)
+                if float(result).is_integer():
                     result = int(result)
-            self.ans = result #data disimpan di ans agar dapat dipakai lagi
+            self.ans = result
             self.expr = str(result)
             self.update_display()
         except Exception:
-            messagebox.showerror("Error", "Ekspresi tidak valid")
+            messagebox.showerror("Error", "Input tidak valid")
             self.expr = ""
             self.update_display()
 
 if __name__ == "__main__":
-    root = tk.Tk() #jendela utama
-    app = SciCalc(root) #objek kalkulator
-    root.mainloop() #menjaga GUI tetap berjalan hingga ditutup penguuna
+    root = tk.Tk()
+    app = SciCalc(root)
+    root.mainloop()
